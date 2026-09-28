@@ -2,26 +2,20 @@ trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 stages:
 - stage: Build
-  displayName: 'Build Stage'
   jobs:
     - job: BuildJob
-    displayName: 'Build Job'
     steps:
         - task: Maven@4
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'clean package'
-        publishJUnitResults: false
-        javaHomeOption: 'JDKVersion'
         jdkVersionOption: '1.17'
-        mavenVersionOption: 'Default'
 
 - stage: Test
-  displayName: 'Test Stage'
   dependsOn: Build
   jobs:
     - job: TestJob
@@ -30,21 +24,15 @@ stages:
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'test'
-        publishJUnitResults: true
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        javaHomeOption: 'JDKVersion'
         jdkVersionOption: '1.17'
 
 - stage: SecurityScan
-  displayName: 'SonarQube Scan'
   dependsOn: Test
   jobs:
-    - job: SonarQubeJob
+    - job: Scan
     steps:
         - task: Maven@4
       inputs:
         mavenPomFile: 'pom.xml'
-        goals: 'verify sonar:sonar'
-        publishJUnitResults: false
-        javaHomeOption: 'JDKVersion'
+        goals: 'verify'
         jdkVersionOption: '1.17'
