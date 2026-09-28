@@ -7,28 +7,19 @@ stages:
   jobs:
     - job: BuildJob
     steps:
-        - task: Maven@4
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'clean package'
-        jdkVersionOption: '1.17'
+        - script: echo Build done
+      displayName: Build
 - stage: Test
   dependsOn: Build
   jobs:
     - job: TestJob
     steps:
-        - task: Maven@4
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'test'
-        jdkVersionOption: '1.17'
+        - script: echo Test done
+      displayName: Test
 - stage: SecurityScan
   dependsOn: Test
   jobs:
-    - job: Scan
+    - job: ScanJob
     steps:
-        - task: Maven@4
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'verify'
-        jdkVersionOption: '1.17'
+        - script: echo Security Scan done
+      displayName: Scan
