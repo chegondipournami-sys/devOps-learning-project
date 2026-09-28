@@ -1,9 +1,7 @@
 trigger:
 - main
-
 pool:
   vmImage: ubuntu-latest
-
 stages:
 - stage: Build
   jobs:
@@ -14,7 +12,6 @@ stages:
         mavenPomFile: 'pom.xml'
         goals: 'clean package'
         jdkVersionOption: '1.17'
-
 - stage: Test
   dependsOn: Build
   jobs:
@@ -25,7 +22,6 @@ stages:
         mavenPomFile: 'pom.xml'
         goals: 'test'
         jdkVersionOption: '1.17'
-
 - stage: SecurityScan
   dependsOn: Test
   jobs:
