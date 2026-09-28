@@ -9,40 +9,42 @@ stages:
   displayName: 'Build Stage'
   jobs:
     - job: BuildJob
+    displayName: 'Build Job'
     steps:
         - task: Maven@4
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'clean package'
+        publishJUnitResults: false
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
+        mavenVersionOption: 'Default'
 
-- stage: UnitTest
-  displayName: 'Unit Test'
+- stage: Test
+  displayName: 'Test Stage'
+  dependsOn: Build
   jobs:
     - job: TestJob
     steps:
-        - script: echo "Running Unit Tests"
-      displayName: 'Unit Tests'
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'test'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
 
-- stage: SonarQube
-  displayName: 'SonarQube Analysis'
+- stage: SecurityScan
+  displayName: 'SonarQube Scan'
+  dependsOn: Test
   jobs:
-    - job: SonarJob
+    - job: SonarQubeJob
     steps:
-        - script: echo "Running SonarQube Scan"
-      displayName: 'SonarQube Scan'
-
-- stage: DependencyScan
-  displayName: 'Dependency Scan'
-  jobs:
-    - job: DepScan
-    steps:
-        - script: echo "Checking Dependencies"
-      displayName: 'Dependency Check'
-
-- stage: Package
-  displayName: 'Package Artifact'
-  jobs:
-    - job: PackageJob
-    steps:
-        - script: echo "Packaging Build"
-      displayName: 'Package'
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'verify sonar:sonar'
+        publishJUnitResults: false
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.17'
