@@ -1,0 +1,48 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+    - job: BuildJob
+    steps:
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean package'
+
+- stage: UnitTest
+  displayName: 'Unit Test'
+  jobs:
+    - job: TestJob
+    steps:
+        - script: echo "Running Unit Tests"
+      displayName: 'Unit Tests'
+
+- stage: SonarQube
+  displayName: 'SonarQube Analysis'
+  jobs:
+    - job: SonarJob
+    steps:
+        - script: echo "Running SonarQube Scan"
+      displayName: 'SonarQube Scan'
+
+- stage: DependencyScan
+  displayName: 'Dependency Scan'
+  jobs:
+    - job: DepScan
+    steps:
+        - script: echo "Checking Dependencies"
+      displayName: 'Dependency Check'
+
+- stage: Package
+  displayName: 'Package Artifact'
+  jobs:
+    - job: PackageJob
+    steps:
+        - script: echo "Packaging Build"
+      displayName: 'Package'
