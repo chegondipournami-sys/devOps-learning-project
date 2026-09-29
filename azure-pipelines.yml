@@ -1,25 +1,57 @@
 trigger:
 - main
+
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
+
 stages:
 - stage: Build
+  displayName: 'Build Stage'
   jobs:
     - job: BuildJob
+    displayName: 'Maven Build'
     steps:
-        - script: echo Build done
-      displayName: Build
-- stage: Test
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean compile'
+
+- stage: Unit_Test
+  displayName: 'Unit Test Stage'
   dependsOn: Build
   jobs:
     - job: TestJob
     steps:
-        - script: echo Test done
-      displayName: Test
-- stage: SecurityScan
-  dependsOn: Test
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'test'
+
+- stage: SonarQube
+  displayName: 'SonarQube Analysis'
+  dependsOn: Unit_Test
   jobs:
-    - job: ScanJob
+    - job: SonarJob
     steps:
-        - script: echo Security Scan done
-      displayName: Scan
+        - script: echo "Running SonarQube Scan"
+      displayName: 'SonarQube Scan'
+
+- stage: Dependency_Scan
+  displayName: 'Dependency Scan'
+  dependsOn: SonarQube
+  jobs:
+    - job: DependencyJob
+    steps:
+        - script: echo "Running Dependency Check"
+      displayName: 'Dependency Scan'
+
+- stage: Package
+  displayName: 'Package Stage'
+  dependsOn: Dependency_Scan
+  jobs:
+    - job: PackageJob
+    steps:
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'package'
