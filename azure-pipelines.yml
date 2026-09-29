@@ -1,15 +1,122 @@
+# SESSION 13 - Complete CI/CD Pipeline (YAML Build and Release)
 trigger:
 - main
-pool:
-  vmImage: 'ubuntu-latest'
-steps:
-- script: echo "Build done"
-  displayName: Build
-- script: echo "Test done"
-  displayName: Test
-- script: echo "SonarQube done"
-  displayName: SonarQube
-- script: echo "Dependency Scan done"
-  displayName: Dependency_Scan
-- script: echo "Package done"
-  displayName: Package
+
+variables:
+  javaVersion: '17'
+  # Secrets are NOT hard-coded - using secret variables / Key Vault
+    - group: DevSecOps-Variable-Group
+    - name: appName
+    value: 'AI-DevSecOps-App'
+
+stages:
+# 1. BUILD STAGE
+- stage: Build
+  jobs:
+    - job: Build_Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean compile'
+
+# 2. TEST STAGE
+- stage: Test
+  dependsOn: Build
+  jobs:
+    - job: Test_Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'test'
+
+# 3. SONARQUBE SCAN
+- stage: SonarQube
+  dependsOn: Test
+  jobs:
+    - job: SonarQube_Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+        - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: 'SonarQube-Service-Connection'
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'verify sonar:sonar'
+        - task: SonarQubePublish@5
+
+# 4. DEPENDENCY SCAN
+- stage: Dependency_Scan
+  dependsOn: SonarQube
+  jobs:
+    - job: DependencyCheck
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+        - task: DependencyCheck@0
+      inputs:
+        projectName: '$(appName)'
+
+# 5. PACKAGE
+- stage: Package
+  dependsOn: Dependency_Scan
+  jobs:
+    - job: Package_Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+        - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'package'
+        - publish: '$(System.DefaultWorkingDirectory)/target/*.war'
+      artifact: 'drop'
+
+# 6. DEV DEPLOYMENT (Kotha)
+- stage: DEV
+  dependsOn: Package
+  jobs:
+    - deployment: Deploy_to_DEV
+    environment: 'DEV'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to DEV Environment using secure secrets from Key Vault"
+
+# 7. QA DEPLOYMENT (Kotha)
+- stage: QA
+  dependsOn: DEV
+  jobs:
+    - deployment: Deploy_to_QA
+    environment: 'QA'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to QA Environment"
+
+# 8. PROD with APPROVAL (Kotha)
+- stage: PROD
+  dependsOn: QA
+  jobs:
+    - deployment: Deploy_to_PROD
+    environment: 'PROD'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to PROD after manual approval - Secrets from $(KeyVaultName)"
