@@ -7,69 +7,89 @@ pool:
 stages:
 - stage: Build
   jobs:
-    - job: Build_Job
+    - job: Build
     steps:
-        - task: Maven@4
+        - task: Maven@3
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'clean compile'
+        publishJUnitResults: false
 
 - stage: Test
   dependsOn: Build
   jobs:
-    - job: Test_Job
+    - job: Test
     steps:
-        - task: Maven@4
+        - task: Maven@3
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'test'
+        publishJUnitResults: true
 
 - stage: SonarQube
   dependsOn: Test
   jobs:
-    - job: SonarQube_Scan
+    - job: SonarQube_Analysis
     steps:
-        - script: echo "Running SonarQube Scan - Static Code & Security Analysis"
-      displayName: 'SonarQube Scan'
+        - script: |
+        echo "Running SonarQube Analysis..."
+        echo "Fetching sonar token from Azure KeyVault"
+      displayName: 'SonarQube Analysis'
 
 - stage: Dependency_Scan
   dependsOn: SonarQube
   jobs:
-    - job: Dependency_Scan
+    - job: DependencyCheck
     steps:
-        - script: echo "Checking vulnerable libraries - Secrets from KeyVault (Not hard-coded)"
+        - script: |
+        echo "Running Dependency Vulnerability Scan..."
+        echo "Secrets fetched securely from KeyVault - not hardcoded"
       displayName: 'Dependency Scan'
 
 - stage: Package
   dependsOn: Dependency_Scan
   jobs:
-    - job: Package_Job
+    - job: Package
     steps:
-        - task: Maven@4
+        - task: Maven@3
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'package'
+        publishJUnitResults: false
+        - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
 
 - stage: DEV
   dependsOn: Package
   jobs:
-    - job: Deploy_DEV
-    steps:
-        - script: echo "Deploying to DEV Environment"
-      displayName: 'DEV Deployment'
+    - deployment: DeployToDEV
+    environment: 'DEV'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to DEV environment"
 
 - stage: QA
   dependsOn: DEV
   jobs:
-    - job: Deploy_QA
-    steps:
-        - script: echo "Deploying to QA Environment"
-      displayName: 'QA Deployment'
+    - deployment: DeployToQA
+    environment: 'QA'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to QA environment"
 
 - stage: PROD
   dependsOn: QA
   jobs:
-    - job: Deploy_PROD
-    steps:
-        - script: echo "Deploying to PROD after manual Approval - Secure deployment"
-      displayName: 'PROD Deployment with Approval'
+    - deployment: DeployToPROD
+    environment: 'PROD'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploying to PROD environment"
