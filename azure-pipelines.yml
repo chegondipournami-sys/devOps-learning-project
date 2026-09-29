@@ -6,55 +6,61 @@ pool:
 
 stages:
 - stage: Build
-  displayName: 'Build Stage'
+  displayName: Build
   jobs:
-    - job: BuildJob
+    - job: Build
+    displayName: Build Job
     steps:
-        - script: echo "Build stage - fetching secrets from KeyVault"
-      displayName: 'Build'
+        - script: echo "Build stage"
+      displayName: Build
 
 - stage: Test
-  displayName: 'Test Stage'
+  displayName: Test
   dependsOn: Build
   jobs:
-    - job: TestJob
+    - job: Test
+    displayName: Test Job
     steps:
-        - script: echo "Test stage - Unit tests"
-      displayName: 'Test'
+        - script: echo "Test stage"
+      displayName: Test
 
 - stage: SonarQube
-  displayName: 'SonarQube Analysis'
+  displayName: SonarQube
   dependsOn: Test
   jobs:
-    - job: SonarJob
+    - job: Sonar
+    displayName: Sonar Job
     steps:
-        - script: echo "SonarQube code quality check with KeyVault secret"
-      displayName: 'SonarQube'
+        - script: echo "SonarQube stage - secrets from KeyVault"
+      displayName: Sonar
 
 - stage: Dependency_Scan
-  displayName: 'Dependency Scan'
+  displayName: Dependency Scan
   dependsOn: SonarQube
   jobs:
-    - job: DepScanJob
+    - job: Scan
+    displayName: Scan Job
     steps:
         - script: echo "Dependency scan - no hardcoded secrets"
-      displayName: 'Dependency Scan'
+      displayName: Scan
 
 - stage: Package
-  displayName: 'Package Stage'
+  displayName: Package
   dependsOn: Dependency_Scan
   jobs:
-    - job: PackageJob
+    - job: Package
+    displayName: Package Job
     steps:
-        - script: echo "Package artifact"
-      displayName: 'Package'
+        - script: echo "Package stage"
+      displayName: Package
 
 - stage: DEV
-  displayName: 'DEV Deploy'
+  displayName: DEV
   dependsOn: Package
   jobs:
-    - deployment: DeployDEV
-    environment: 'DEV'
+    - deployment: DEV
+    displayName: DEV Deploy
+    environment: DEV
     strategy:
       runOnce:
         deploy:
@@ -62,11 +68,12 @@ stages:
                     - script: echo "Deploy to DEV"
 
 - stage: QA
-  displayName: 'QA Deploy'
+  displayName: QA
   dependsOn: DEV
   jobs:
-    - deployment: DeployQA
-    environment: 'QA'
+    - deployment: QA
+    displayName: QA Deploy
+    environment: QA
     strategy:
       runOnce:
         deploy:
@@ -74,11 +81,12 @@ stages:
                     - script: echo "Deploy to QA"
 
 - stage: PROD
-  displayName: 'PROD Deploy'
+  displayName: PROD
   dependsOn: QA
   jobs:
-    - deployment: DeployPROD
-    environment: 'PROD'
+    - deployment: PROD
+    displayName: PROD Deploy
+    environment: PROD
     strategy:
       runOnce:
         deploy:
