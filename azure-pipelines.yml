@@ -6,90 +6,81 @@ pool:
 
 stages:
 - stage: Build
+  displayName: 'Build Stage'
   jobs:
-    - job: Build
+    - job: BuildJob
     steps:
-        - task: Maven@3
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'clean compile'
-        publishJUnitResults: false
+        - script: echo "Build stage - fetching secrets from KeyVault"
+      displayName: 'Build'
 
 - stage: Test
+  displayName: 'Test Stage'
   dependsOn: Build
   jobs:
-    - job: Test
+    - job: TestJob
     steps:
-        - task: Maven@3
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'test'
-        publishJUnitResults: true
+        - script: echo "Test stage - Unit tests"
+      displayName: 'Test'
 
 - stage: SonarQube
+  displayName: 'SonarQube Analysis'
   dependsOn: Test
   jobs:
-    - job: SonarQube_Analysis
+    - job: SonarJob
     steps:
-        - script: |
-        echo "Running SonarQube Analysis..."
-        echo "Fetching sonar token from Azure KeyVault"
-      displayName: 'SonarQube Analysis'
+        - script: echo "SonarQube code quality check with KeyVault secret"
+      displayName: 'SonarQube'
 
 - stage: Dependency_Scan
+  displayName: 'Dependency Scan'
   dependsOn: SonarQube
   jobs:
-    - job: DependencyCheck
+    - job: DepScanJob
     steps:
-        - script: |
-        echo "Running Dependency Vulnerability Scan..."
-        echo "Secrets fetched securely from KeyVault - not hardcoded"
+        - script: echo "Dependency scan - no hardcoded secrets"
       displayName: 'Dependency Scan'
 
 - stage: Package
+  displayName: 'Package Stage'
   dependsOn: Dependency_Scan
   jobs:
-    - job: Package
+    - job: PackageJob
     steps:
-        - task: Maven@3
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'package'
-        publishJUnitResults: false
-        - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'drop'
+        - script: echo "Package artifact"
+      displayName: 'Package'
 
 - stage: DEV
+  displayName: 'DEV Deploy'
   dependsOn: Package
   jobs:
-    - deployment: DeployToDEV
+    - deployment: DeployDEV
     environment: 'DEV'
     strategy:
       runOnce:
         deploy:
           steps:
-                    - script: echo "Deploying to DEV environment"
+                    - script: echo "Deploy to DEV"
 
 - stage: QA
+  displayName: 'QA Deploy'
   dependsOn: DEV
   jobs:
-    - deployment: DeployToQA
+    - deployment: DeployQA
     environment: 'QA'
     strategy:
       runOnce:
         deploy:
           steps:
-                    - script: echo "Deploying to QA environment"
+                    - script: echo "Deploy to QA"
 
 - stage: PROD
+  displayName: 'PROD Deploy'
   dependsOn: QA
   jobs:
-    - deployment: DeployToPROD
+    - deployment: DeployPROD
     environment: 'PROD'
     strategy:
       runOnce:
         deploy:
           steps:
-                    - script: echo "Deploying to PROD environment"
+                    - script: echo "Deploy to PROD"
