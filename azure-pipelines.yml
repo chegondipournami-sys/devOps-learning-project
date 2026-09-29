@@ -6,10 +6,8 @@ pool:
 
 stages:
 - stage: Build
-  displayName: Build Stage
   jobs:
     - job: BuildJob
-    displayName: Maven Build
     steps:
         - task: Maven@3
       inputs:
@@ -17,7 +15,6 @@ stages:
         goals: 'clean compile'
 
 - stage: Unit_Test
-  displayName: Unit Test Stage
   dependsOn: Build
   jobs:
     - job: TestJob
@@ -28,25 +25,20 @@ stages:
         goals: 'test'
 
 - stage: SonarQube
-  displayName: SonarQube Analysis
   dependsOn: Unit_Test
   jobs:
     - job: SonarJob
     steps:
-        - script: echo Running SonarQube Scan
-      displayName: SonarQube Scan
+        - script: echo SonarQube Scan done
 
 - stage: Dependency_Scan
-  displayName: Dependency Scan
   dependsOn: SonarQube
   jobs:
-    - job: DependencyJob
+    - job: DepJob
     steps:
-        - script: echo Running Dependency Check
-      displayName: Dependency Check
+        - script: echo Dependency Scan done
 
 - stage: Package
-  displayName: Package Stage
   dependsOn: Dependency_Scan
   jobs:
     - job: PackageJob
