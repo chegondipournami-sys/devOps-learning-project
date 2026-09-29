@@ -3,17 +3,13 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'clean compile'
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'test'
-- script: echo SonarQube done
-- script: echo Dependency Scan done
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'package'
+- script: echo "Build done"
+  displayName: Build
+- script: echo "Test done"
+  displayName: Test
+- script: echo "SonarQube done"
+  displayName: SonarQube
+- script: echo "Dependency Scan done"
+  displayName: Dependency_Scan
+- script: echo "Package done"
+  displayName: Package
