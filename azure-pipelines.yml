@@ -1,94 +1,39 @@
-trigger:
-- main
-
+trigger:main
 pool:
-  vmImage: 'ubuntu-latest'
-
-stages:
-- stage: Build
-  displayName: Build
-  jobs:
-    - job: Build
-    displayName: Build Job
-    steps:
-        - script: echo "Build stage"
-      displayName: Build
-
-- stage: Test
-  displayName: Test
-  dependsOn: Build
-  jobs:
-    - job: Test
-    displayName: Test Job
-    steps:
-        - script: echo "Test stage"
-      displayName: Test
-
-- stage: SonarQube
-  displayName: SonarQube
-  dependsOn: Test
-  jobs:
-    - job: Sonar
-    displayName: Sonar Job
-    steps:
-        - script: echo "SonarQube stage - secrets from KeyVault"
-      displayName: Sonar
-
-- stage: Dependency_Scan
-  displayName: Dependency Scan
-  dependsOn: SonarQube
-  jobs:
-    - job: Scan
-    displayName: Scan Job
-    steps:
-        - script: echo "Dependency scan - no hardcoded secrets"
-      displayName: Scan
-
-- stage: Package
-  displayName: Package
-  dependsOn: Dependency_Scan
-  jobs:
-    - job: Package
-    displayName: Package Job
-    steps:
-        - script: echo "Package stage"
-      displayName: Package
-
-- stage: DEV
-  displayName: DEV
-  dependsOn: Package
-  jobs:
-    - deployment: DEV
-    displayName: DEV Deploy
-    environment: DEV
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to DEV"
-
-- stage: QA
-  displayName: QA
-  dependsOn: DEV
-  jobs:
-    - deployment: QA
-    displayName: QA Deploy
-    environment: QA
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to QA"
-
-- stage: PROD
-  displayName: PROD
-  dependsOn: QA
-  jobs:
-    - deployment: PROD
-    displayName: PROD Deploy
-    environment: PROD
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to PROD"
+vmImage: 'ubuntu-latest'
+stages:stage: Build
+jobs:job: Build
+steps:script: echo Buildstage: Test
+dependsOn: Build
+jobs:job: Test
+steps:script: echo Teststage: SonarQube
+dependsOn: Test
+jobs:job: Sonar
+steps:script: echo Sonarstage: Dependency_Scan
+dependsOn: SonarQube
+jobs:job: Scan
+steps:script: echo Scanstage: Package
+dependsOn: Dependency_Scan
+jobs:job: Package
+steps:script: echo Packagestage: DEV
+dependsOn: Package
+jobs:deployment: DEV
+environment: DEV
+strategy:
+  runOnce:javascriptdeploy:
+  steps:
+  - script: echo DEVstage: QA
+dependsOn: DEV
+jobs:deployment: QA
+environment: QA
+strategy:
+  runOnce:javascriptdeploy:
+  steps:
+  - script: echo QAstage: PROD
+dependsOn: QA
+jobs:deployment: PROD
+environment: PROD
+strategy:
+  runOnce:javascriptdeploy:
+  steps:
+  - script: echo PROD
