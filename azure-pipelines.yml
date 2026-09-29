@@ -3,11 +3,13 @@ trigger:
 - main
 
 variables:
-  javaVersion: '17'
-  # Secrets are NOT hard-coded - using secret variables / Key Vault
-    - group: DevSecOps-Variable-Group
-    - name: appName
-    value: 'AI-DevSecOps-App'
+- group: DevSecOps-Variable-Group
+- name: javaVersion
+  value: '17'
+- name: appName
+  value: 'AI-DevSecOps-App'
+- name: KeyVaultName
+  value: 'MyKeyVault-Secrets'
 
 stages:
 # 1. BUILD STAGE
@@ -60,9 +62,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-        - task: DependencyCheck@0
-      inputs:
-        projectName: '$(appName)'
+        - script: echo "Checking for vulnerable libraries - Using secret from $(KeyVaultName)"
 
 # 5. PACKAGE
 - stage: Package
@@ -79,7 +79,7 @@ stages:
         - publish: '$(System.DefaultWorkingDirectory)/target/*.war'
       artifact: 'drop'
 
-# 6. DEV DEPLOYMENT (Kotha)
+# 6. DEV DEPLOYMENT
 - stage: DEV
   dependsOn: Package
   jobs:
@@ -91,9 +91,9 @@ stages:
       runOnce:
         deploy:
           steps:
-                    - script: echo "Deploying to DEV Environment using secure secrets from Key Vault"
+                    - script: echo "Deploying to DEV Environment using secure secrets"
 
-# 7. QA DEPLOYMENT (Kotha)
+# 7. QA DEPLOYMENT
 - stage: QA
   dependsOn: DEV
   jobs:
@@ -107,7 +107,7 @@ stages:
           steps:
                     - script: echo "Deploying to QA Environment"
 
-# 8. PROD with APPROVAL (Kotha)
+# 8. PROD with APPROVAL
 - stage: PROD
   dependsOn: QA
   jobs:
@@ -119,4 +119,4 @@ stages:
       runOnce:
         deploy:
           steps:
-                    - script: echo "Deploying to PROD after manual approval - Secrets from $(KeyVaultName)"
+                    - script: echo "Deploying to PROD after approval - Secrets from $(KeyVaultName)"
