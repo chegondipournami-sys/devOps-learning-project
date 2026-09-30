@@ -1,39 +1,66 @@
-trigger:main
+trigger:
+- main
+
 pool:
-vmImage: 'ubuntu-latest'
-stages:stage: Build
-jobs:job: Build
-steps:script: echo Buildstage: Test
-dependsOn: Build
-jobs:job: Test
-steps:script: echo Teststage: SonarQube
-dependsOn: Test
-jobs:job: Sonar
-steps:script: echo Sonarstage: Dependency_Scan
-dependsOn: SonarQube
-jobs:job: Scan
-steps:script: echo Scanstage: Package
-dependsOn: Dependency_Scan
-jobs:job: Package
-steps:script: echo Packagestage: DEV
-dependsOn: Package
-jobs:deployment: DEV
-environment: DEV
-strategy:
-  runOnce:javascriptdeploy:
-  steps:
-  - script: echo DEVstage: QA
-dependsOn: DEV
-jobs:deployment: QA
-environment: QA
-strategy:
-  runOnce:javascriptdeploy:
-  steps:
-  - script: echo QAstage: PROD
-dependsOn: QA
-jobs:deployment: PROD
-environment: PROD
-strategy:
-  runOnce:javascriptdeploy:
-  steps:
-  - script: echo PROD
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  jobs:
+    - job: Build
+    steps:
+        - script: echo "Build stage"
+- stage: Test
+  dependsOn: Build
+  jobs:
+    - job: Test
+    steps:
+        - script: echo "Test stage"
+- stage: SonarQube
+  dependsOn: Test
+  jobs:
+    - job: Sonar
+    steps:
+        - script: echo "SonarQube scan"
+- stage: Dependency_Scan
+  dependsOn: SonarQube
+  jobs:
+    - job: Scan
+    steps:
+        - script: echo "Dependency Scan"
+- stage: Package
+  dependsOn: Dependency_Scan
+  jobs:
+    - job: Package
+    steps:
+        - script: echo "Package stage"
+- stage: DEV
+  dependsOn: Package
+  jobs:
+    - deployment: DEV
+    environment: DEV
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploy to DEV"
+- stage: QA
+  dependsOn: DEV
+  jobs:
+    - deployment: QA
+    environment: QA
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploy to QA"
+- stage: PROD
+  dependsOn: QA
+  jobs:
+    - deployment: PROD
+    environment: PROD
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+                    - script: echo "Deploy to PROD"
