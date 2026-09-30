@@ -1,52 +1,74 @@
 trigger:
 - main
-pool:
-  vmImage: 'ubuntu-latest'
+
 stages:
 - stage: Build
   jobs:
     - job: BuildJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Build stage"
+
 - stage: Test
   dependsOn: Build
   jobs:
     - job: TestJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Test stage"
+
 - stage: SonarQube
   dependsOn: Test
   jobs:
     - job: SonarJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "SonarQube scan"
+
 - stage: Dependency_Scan
   dependsOn: SonarQube
   jobs:
     - job: ScanJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Dependency Scan"
+
 - stage: Package
   dependsOn: Dependency_Scan
   jobs:
     - job: PackageJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Package stage"
+
 - stage: DEV
   dependsOn: Package
   jobs:
     - job: DEVJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Deploy to DEV"
+
 - stage: QA
   dependsOn: DEV
   jobs:
     - job: QAJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Deploy to QA"
+
 - stage: PROD
   dependsOn: QA
   jobs:
     - job: PRODJob
+    pool:
+      vmImage: 'ubuntu-latest'
     steps:
         - script: echo "Deploy to PROD"
