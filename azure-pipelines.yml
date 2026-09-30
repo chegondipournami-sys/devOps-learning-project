@@ -1,0 +1,52 @@
+trigger:
+- main
+pool:
+  vmImage: 'ubuntu-latest'
+stages:
+- stage: Build
+  jobs:
+    - job: BuildJob
+    steps:
+        - script: echo "Build stage"
+- stage: Test
+  dependsOn: Build
+  jobs:
+    - job: TestJob
+    steps:
+        - script: echo "Test stage"
+- stage: SonarQube
+  dependsOn: Test
+  jobs:
+    - job: SonarJob
+    steps:
+        - script: echo "SonarQube scan"
+- stage: Dependency_Scan
+  dependsOn: SonarQube
+  jobs:
+    - job: ScanJob
+    steps:
+        - script: echo "Dependency Scan"
+- stage: Package
+  dependsOn: Dependency_Scan
+  jobs:
+    - job: PackageJob
+    steps:
+        - script: echo "Package stage"
+- stage: DEV
+  dependsOn: Package
+  jobs:
+    - job: DEVJob
+    steps:
+        - script: echo "Deploy to DEV"
+- stage: QA
+  dependsOn: DEV
+  jobs:
+    - job: QAJob
+    steps:
+        - script: echo "Deploy to QA"
+- stage: PROD
+  dependsOn: QA
+  jobs:
+    - job: PRODJob
+    steps:
+        - script: echo "Deploy to PROD"
