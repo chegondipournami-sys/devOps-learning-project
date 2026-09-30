@@ -1,66 +1,52 @@
 trigger:
 - main
-
 pool:
-  vmImage: 'ubuntu-latest'
-
+vmImage: 'ubuntu-latest'
 stages:
 - stage: Build
-  jobs:
-    - job: Build
-    steps:
-        - script: echo "Build stage"
+jobs:
+  - job: BuildJob
+  steps:
+      - script: echo "Build stage"
 - stage: Test
-  dependsOn: Build
-  jobs:
-    - job: Test
-    steps:
-        - script: echo "Test stage"
+dependsOn: Build
+jobs:
+  - job: TestJob
+  steps:
+      - script: echo "Test stage"
 - stage: SonarQube
-  dependsOn: Test
-  jobs:
-    - job: Sonar
-    steps:
-        - script: echo "SonarQube scan"
+dependsOn: Test
+jobs:
+  - job: SonarJob
+  steps:
+      - script: echo "SonarQube scan"
 - stage: Dependency_Scan
-  dependsOn: SonarQube
-  jobs:
-    - job: Scan
-    steps:
-        - script: echo "Dependency Scan"
+dependsOn: SonarQube
+jobs:
+  - job: ScanJob
+  steps:
+      - script: echo "Dependency Scan"
 - stage: Package
-  dependsOn: Dependency_Scan
-  jobs:
-    - job: Package
-    steps:
-        - script: echo "Package stage"
+dependsOn: Dependency_Scan
+jobs:
+  - job: PackageJob
+  steps:
+      - script: echo "Package stage"
 - stage: DEV
-  dependsOn: Package
-  jobs:
-    - deployment: DEV
-    environment: DEV
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to DEV"
+dependsOn: Package
+jobs:
+  - job: DEVJob
+  steps:
+      - script: echo "Deploy to DEV"
 - stage: QA
-  dependsOn: DEV
-  jobs:
-    - deployment: QA
-    environment: QA
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to QA"
+dependsOn: DEV
+jobs:
+  - job: QAJob
+  steps:
+      - script: echo "Deploy to QA"
 - stage: PROD
-  dependsOn: QA
-  jobs:
-    - deployment: PROD
-    environment: PROD
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-                    - script: echo "Deploy to PROD"
+dependsOn: QA
+jobs:
+  - job: PRODJob
+  steps:
+    - script: echo "Deploy to PROD"
